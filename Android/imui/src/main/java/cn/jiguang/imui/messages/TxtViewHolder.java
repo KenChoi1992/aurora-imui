@@ -2,6 +2,8 @@ package cn.jiguang.imui.messages;
 
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import cn.jiguang.imui.BuildConfig;
@@ -17,6 +19,8 @@ public class TxtViewHolder<MESSAGE extends IMessage>
     protected TextView mDateTv;
     protected TextView mDisplayNameTv;
     protected CircleImageView mAvatarIv;
+    protected ImageButton mResendIb;
+    protected ImageView mSendingIv;
     protected boolean mIsSender;
 
     public TxtViewHolder(View itemView, boolean isSender) {
@@ -26,6 +30,8 @@ public class TxtViewHolder<MESSAGE extends IMessage>
         mDateTv = (TextView) itemView.findViewById(R.id.aurora_tv_msgitem_date);
         mAvatarIv = (CircleImageView) itemView.findViewById(R.id.aurora_iv_msgitem_avatar);
         mDisplayNameTv = (TextView) itemView.findViewById(R.id.aurora_tv_msgitem_display_name);
+        mResendIb = (ImageButton) itemView.findViewById(R.id.aurora_ib_msgitem_resend);
+        mSendingIv = (ImageView) itemView.findViewById(R.id.aurora_iv_msgitem_sending);
     }
 
     @Override
@@ -44,6 +50,18 @@ public class TxtViewHolder<MESSAGE extends IMessage>
         if (!mIsSender) {
             if (mDisplayNameTv.getVisibility() == View.VISIBLE) {
                 mDisplayNameTv.setText(message.getFromUser().getDisplayName());
+            }
+        } else {
+            switch (message.getMessageStatus()) {
+                case SEND_GOING:
+                    Log.i("TxtViewHolder", "sending message");
+                    break;
+                case SEND_FAILED:
+                    Log.i("TxtViewHolder", "send message failed");
+                    break;
+                case SEND_SUCCEED:
+                    Log.i("TxtViewHolder", "send message succeed");
+                    break;
             }
         }
 

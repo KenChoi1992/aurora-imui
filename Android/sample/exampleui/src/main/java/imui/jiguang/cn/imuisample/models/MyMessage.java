@@ -67,6 +67,11 @@ public class MyMessage implements IMessage {
     }
 
     @Override
+    public MessageStatus getMessageStatus() {
+        return null;
+    }
+
+    @Override
     public String getText() {
         return text;
     }

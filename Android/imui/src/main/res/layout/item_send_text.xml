@@ -14,6 +14,25 @@
         android:gravity="right"
         android:orientation="horizontal">
 
+        <ImageButton
+            android:id="@+id/aurora_ib_msgitem_resend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="5dp"
+            android:background="@drawable/aurora_send_msg_error"
+            android:clickable="true"
+            android:scaleType="fitCenter"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/aurora_iv_msgitem_sending"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginRight="3dp"
+            android:src="@drawable/aurora_send_msg_sending"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/aurora_tv_msgitem_message"
