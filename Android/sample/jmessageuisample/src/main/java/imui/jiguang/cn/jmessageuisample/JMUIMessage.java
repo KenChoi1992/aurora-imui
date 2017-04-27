@@ -4,7 +4,11 @@ package imui.jiguang.cn.jmessageuisample;
 import cn.jiguang.imui.commons.models.IMessage;
 import cn.jpush.im.android.api.callback.GetUserInfoListCallback;
 import cn.jpush.im.android.api.callback.ProgressUpdateCallback;
+import cn.jpush.im.android.api.content.ImageContent;
+import cn.jpush.im.android.api.content.MediaContent;
 import cn.jpush.im.android.api.content.TextContent;
+import cn.jpush.im.android.api.content.VoiceContent;
+import cn.jpush.im.android.api.enums.ContentType;
 import cn.jpush.im.android.api.enums.MessageDirect;
 import cn.jpush.im.android.api.model.Message;
 import cn.jpush.im.api.BasicCallback;
@@ -24,6 +28,11 @@ public class JMUIMessage extends Message implements IMessage {
     public JMUIMessage(Message message) {
         this.message = message;
         this.jmUserInfo = new JMUserInfo(message.getFromUser());
+        ContentType contentType = message.getContentType();
+        if (contentType == ContentType.voice || contentType == ContentType.image
+                || contentType == ContentType.video || contentType == ContentType.file) {
+            mediaFilePath = ((MediaContent) message.getContent()).getLocalPath();
+        }
     }
 
     public Message getMessage() {
