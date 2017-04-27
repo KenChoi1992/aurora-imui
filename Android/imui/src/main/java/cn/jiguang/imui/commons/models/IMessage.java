@@ -91,4 +91,6 @@ public interface IMessage {
      * @return duration of audio or video
      */
     long getDuration();
+
+    String getProgress();
 }

@@ -19,6 +19,7 @@ public class JMUIMessage extends Message implements IMessage {
     private Message message;
     private String mediaFilePath;
     private MessageType type;
+    private String progress;
 
     public JMUIMessage(Message message) {
         this.message = message;
@@ -106,6 +107,15 @@ public class JMUIMessage extends Message implements IMessage {
     @Override
     public long getDuration() {
         return 0;
+    }
+
+    public void setProgress(String progress) {
+        this.progress = progress;
+    }
+
+    @Override
+    public String getProgress() {
+        return this.progress;
     }
 
     @Override

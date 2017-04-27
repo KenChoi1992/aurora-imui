@@ -341,7 +341,7 @@ public class ChatInputView extends LinearLayout
                 if (onSubmit()) {
                     mChatInput.setText("");
                 }
-                if (mSelectPhotoView.getSelectFiles().size() > 0) {
+                if (null != mSelectPhotoView.getSelectFiles() && mSelectPhotoView.getSelectFiles().size() > 0) {
                     mListener.onSendFiles(mSelectPhotoView.getSelectFiles());
 
                     mSendBtn.setImageDrawable(ContextCompat.getDrawable(getContext(),

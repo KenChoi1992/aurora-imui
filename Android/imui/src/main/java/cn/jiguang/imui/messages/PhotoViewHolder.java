@@ -90,6 +90,20 @@ public class PhotoViewHolder<MESSAGE extends IMessage> extends BaseMessageViewHo
                 return true;
             }
         });
+
+        if (mIsSender) {
+            switch (message.getMessageStatus()) {
+                case SEND_GOING:
+                    Log.i("PhotoViewHolder", "sending image, progress: " + message.getProgress());
+                    break;
+                case SEND_FAILED:
+                    Log.i("PhotoViewHolder", "send image failed");
+                    break;
+                case SEND_SUCCEED:
+                    Log.i("PhotoViewHolder", "send image succeed");
+                    break;
+            }
+        }
     }
 
     @Override

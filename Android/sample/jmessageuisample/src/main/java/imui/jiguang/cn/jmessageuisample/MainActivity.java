@@ -27,6 +27,7 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -37,6 +38,8 @@ import cn.jiguang.imui.chatinput.model.FileItem;
 import cn.jiguang.imui.commons.ImageLoader;
 import cn.jiguang.imui.messages.MsgListAdapter;
 import cn.jpush.im.android.api.JMessageClient;
+import cn.jpush.im.android.api.callback.GetUserInfoCallback;
+import cn.jpush.im.android.api.callback.ProgressUpdateCallback;
 import cn.jpush.im.android.api.content.EventNotificationContent;
 import cn.jpush.im.android.api.content.ImageContent;
 import cn.jpush.im.android.api.content.TextContent;
@@ -57,7 +60,8 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
 
     private MsgListAdapter<JMUIMessage> mAdapter;
     private Context mContext;
-    private List<JMUIMessage> mData;
+    private List<JMUIMessage> mData = new ArrayList<>();
+    private List<Message> mMsgList;
     private ChatView mChatView;
     private final int REQUEST_RECORD_VOICE_PERMISSION = 0x0001;
     private final int REQUEST_CAMERA_PERMISSION = 0x0002;
@@ -72,28 +76,51 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
     private Long mGroupId;
     private UserInfo mMyInfo;
     private JMUserInfo mTargetInfo;
+    public static final int PAGE_MESSAGE_COUNT = 18;
+    private int mOffset = PAGE_MESSAGE_COUNT;
+    private int mStart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mChatView = (ChatView) findViewById(R.id.chat_view);
         JMessageClient.registerEventReceiver(this);
         mContext = this;
         mMyInfo = JMessageClient.getMyInfo();
         mTargetId = getIntent().getStringExtra("targetId");
         mTargetAppKey = getIntent().getStringExtra("targetAppKey");
         int softKeyboardHeight = getIntent().getIntExtra("softKeyboardHeight", 500);
+        mChatView.initModule(softKeyboardHeight);
         mConv = JMessageClient.getSingleConversation(mTargetId, mTargetAppKey);
         if (mConv == null) {
             Log.i(TAG, "create new conversation");
             mConv = Conversation.createSingleConversation(mTargetId, mTargetAppKey);
         }
+        this.mMsgList = mConv.getMessagesFromNewest(0, mOffset);
+        mStart = mOffset;
+        if (mMsgList.size() > 0) {
+            for (Message message : mMsgList) {
+                JMUIMessage jmuiMessage = new JMUIMessage(message);
+                mData.add(jmuiMessage);
+            }
+        }
         UserInfo userInfo = (UserInfo) mConv.getTargetInfo();
+        if (userInfo == null) {
+            JMessageClient.getUserInfo(mTargetId, new GetUserInfoCallback() {
+                @Override
+                public void gotResult(int status, String s, UserInfo userInfo) {
+                    if (status == 0) {
+                        mChatView.setTitle(userInfo.getUserName());
+                    }
+                }
+            });
+        } else {
+            mChatView.setTitle(userInfo.getUserName());
+        }
         mTargetInfo = new JMUserInfo(userInfo);
         this.mImm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         mWindow = getWindow();
-        mChatView = (ChatView) findViewById(R.id.chat_view);
-        mChatView.initModule(softKeyboardHeight);
         initMsgAdapter();
         mChatView.setKeyboardChangedListener(this);
         mChatView.setOnSizeChangedListener(this);
@@ -154,6 +181,13 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
                                         @Override
                                         public void run() {
                                             mAdapter.addToStart(message, true);
+                                        }
+                                    });
+                                    msg.setOnContentUploadProgressCallback(new ProgressUpdateCallback() {
+                                        @Override
+                                        public void onProgressUpdate(double v) {
+                                            Log.w(TAG, "Uploading image " + v);
+                                            message.setProgress((int) (v * 100) + "%");
                                         }
                                     });
                                 }
@@ -307,19 +341,37 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
         mAdapter.setOnLoadMoreListener(new MsgListAdapter.OnLoadMoreListener() {
             @Override
             public void onLoadMore(int page, int totalCount) {
-//                if (totalCount < mData.size()) {
-//                    loadNextPage();
-//                }
+                Log.i(TAG, "Loading next page");
+                if (totalCount == mData.size()) {
+                    loadNextPage();
+                }
             }
         });
         mChatView.setAdapter(mAdapter);
+        mAdapter.addToEnd(mData);
     }
 
     private void loadNextPage() {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-//                mAdapter.addToEnd(mData, true);
+                if (mConv != null) {
+                    List<Message> msgList = mConv.getMessagesFromNewest(mStart, PAGE_MESSAGE_COUNT);
+                    if (msgList != null) {
+                        for (Message msg : msgList) {
+                            JMUIMessage jmuiMessage = new JMUIMessage(msg);
+                            mData.add(0, jmuiMessage);
+                        }
+                        if (msgList.size() > 0) {
+//                            checkSendingImgMsg();
+                            mOffset = msgList.size();
+                        } else {
+                            mOffset = 0;
+                        }
+                        mStart += mOffset;
+                        mAdapter.addToEnd(mData.subList(0, msgList.size()));
+                    }
+                }
             }
         }, 1000);
     }
