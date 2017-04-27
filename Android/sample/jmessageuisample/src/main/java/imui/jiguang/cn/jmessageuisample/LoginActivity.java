@@ -69,7 +69,7 @@ public class LoginActivity extends Activity implements View.OnClickListener, Log
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             intent.putExtra("softKeyboardHeight", mSoftKeyboardHeight);
                             intent.putExtra("targetAppKey", appKey);
-                            intent.putExtra("targetId", "0002");
+                            intent.putExtra("targetId", "0001");
                             LoginActivity.this.startActivity(intent);
                         } else {
                             Log.e("LoginActivity", "status = " + status);
