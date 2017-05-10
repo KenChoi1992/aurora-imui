@@ -20,7 +20,7 @@ import cn.jpush.im.api.BasicCallback;
 public class LoginActivity extends Activity implements View.OnClickListener, LoginView.OnSizeChangedListener {
 
     private LoginView mLoginView;
-    private int mSoftKeyboardHeight;
+    private String TARGET_ID = "0002";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,11 +65,12 @@ public class LoginActivity extends Activity implements View.OnClickListener, Log
                         dialog.dismiss();
                         if (status == 0) {
                             String username = JMessageClient.getMyInfo().getUserName();
+                            SharePreferenceManager.setCachedUsername(username);
                             String appKey = JMessageClient.getMyInfo().getAppKey();
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            intent.putExtra("softKeyboardHeight", mSoftKeyboardHeight);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             intent.putExtra("targetAppKey", appKey);
-                            intent.putExtra("targetId", "0001");
+                            intent.putExtra("targetId", TARGET_ID);
                             LoginActivity.this.startActivity(intent);
                         } else {
                             Log.e("LoginActivity", "status = " + status);
@@ -85,8 +86,11 @@ public class LoginActivity extends Activity implements View.OnClickListener, Log
     @Override
     public void onSoftKeyboardShown(int w, int h, int oldw, int oldh) {
         if (oldh - h > 300) {
-            mSoftKeyboardHeight = oldh - h;
-            Log.i("LoginActivity", "SoftKeyboard height: " + mSoftKeyboardHeight);
+            int height = oldh - h;
+            if (SharePreferenceManager.getCachedKeyboardHeight() != height) {
+                SharePreferenceManager.setCachedKeyboardHeight(height);
+            }
+            Log.i("LoginActivity", "SoftKeyboard height: " + height);
         }
     }
 }
