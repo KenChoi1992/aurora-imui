@@ -47,13 +47,13 @@ public class ChatView extends RelativeLayout {
         mContext = context;
     }
 
-    public void initModule(int height) {
+    public void initModule() {
         mTitle = (TextView) findViewById(R.id.title_tv);
         mMsgList = (MessageList) findViewById(R.id.msg_list);
         mChatInput = (ChatInputView) findViewById(R.id.chat_input);
         mRecordVoiceBtn = mChatInput.getRecordVoiceButton();
-        Log.i("ChatView", "setting softKeyboard height " + height);
-        mChatInput.setMenuContainerHeight(height);
+        Log.i("ChatView", "setting softKeyboard height " + SharePreferenceManager.getCachedKeyboardHeight());
+        mChatInput.setMenuContainerHeight(SharePreferenceManager.getCachedKeyboardHeight());
     }
 
     public void setTitle(String title) {

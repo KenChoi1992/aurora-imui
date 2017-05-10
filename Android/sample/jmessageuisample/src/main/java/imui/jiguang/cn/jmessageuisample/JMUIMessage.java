@@ -4,7 +4,6 @@ package imui.jiguang.cn.jmessageuisample;
 import cn.jiguang.imui.commons.models.IMessage;
 import cn.jpush.im.android.api.callback.GetUserInfoListCallback;
 import cn.jpush.im.android.api.callback.ProgressUpdateCallback;
-import cn.jpush.im.android.api.content.ImageContent;
 import cn.jpush.im.android.api.content.MediaContent;
 import cn.jpush.im.android.api.content.TextContent;
 import cn.jpush.im.android.api.content.VoiceContent;
@@ -115,6 +114,9 @@ public class JMUIMessage extends Message implements IMessage {
 
     @Override
     public long getDuration() {
+        if (message.getContentType() == ContentType.voice) {
+            return ((VoiceContent) message.getContent()).getDuration();
+        }
         return 0;
     }
 

@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,16 +21,15 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import cn.jiguang.api.JCoreInterface;
 import cn.jiguang.imui.chatinput.ChatInputView;
 import cn.jiguang.imui.chatinput.listener.OnMenuClickListener;
 import cn.jiguang.imui.chatinput.listener.RecordVoiceListener;
@@ -63,7 +61,7 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
     private MsgListAdapter<JMUIMessage> mAdapter;
     private Context mContext;
     private List<JMUIMessage> mData = new ArrayList<>();
-    private List<Message> mMsgList;
+    private List<Message> mMsgList = new ArrayList<>();
     private ChatView mChatView;
     private final int REQUEST_RECORD_VOICE_PERMISSION = 0x0001;
     private final int REQUEST_CAMERA_PERMISSION = 0x0002;
@@ -90,139 +88,139 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
         JMessageClient.registerEventReceiver(this);
         mContext = this;
         mMyInfo = JMessageClient.getMyInfo();
-        mTargetId = getIntent().getStringExtra("targetId");
-        mTargetAppKey = getIntent().getStringExtra("targetAppKey");
-        int softKeyboardHeight = getIntent().getIntExtra("softKeyboardHeight", 500);
-        mChatView.initModule(softKeyboardHeight);
-        mConv = JMessageClient.getSingleConversation(mTargetId, mTargetAppKey);
-        if (mConv == null) {
-            Log.i(TAG, "create new conversation");
-            mConv = Conversation.createSingleConversation(mTargetId, mTargetAppKey);
-        }
-        this.mMsgList = mConv.getMessagesFromNewest(0, mOffset);
-        mStart = mOffset;
-        if (mMsgList.size() > 0) {
-            for (Message message : mMsgList) {
-                JMUIMessage jmuiMessage = new JMUIMessage(message);
-                mData.add(jmuiMessage);
+        try {
+            mTargetId = getIntent().getStringExtra("targetId");
+            mTargetAppKey = getIntent().getStringExtra("targetAppKey");
+            mChatView.initModule();
+            mConv = JMessageClient.getSingleConversation(mTargetId, mTargetAppKey);
+            if (mConv == null) {
+                Log.i(TAG, "create new conversation");
+                mConv = Conversation.createSingleConversation(mTargetId, mTargetAppKey);
             }
-        }
-        UserInfo userInfo = (UserInfo) mConv.getTargetInfo();
-        if (userInfo == null) {
-            JMessageClient.getUserInfo(mTargetId, new GetUserInfoCallback() {
-                @Override
-                public void gotResult(int status, String s, UserInfo userInfo) {
-                    if (status == 0) {
-                        mChatView.setTitle(userInfo.getUserName());
-                    }
+            this.mMsgList = mConv.getMessagesFromNewest(0, mOffset);
+            mStart = mOffset;
+            if (mMsgList.size() > 0) {
+                for (Message message : mMsgList) {
+                    JMUIMessage jmuiMessage = new JMUIMessage(message);
+                    mData.add(jmuiMessage);
                 }
-            });
-        } else {
-            mChatView.setTitle(userInfo.getUserName());
-        }
-        mTargetInfo = new JMUserInfo(userInfo);
-        this.mImm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        mWindow = getWindow();
-        initMsgAdapter();
-        mChatView.setKeyboardChangedListener(this);
-        mChatView.setOnSizeChangedListener(this);
-        mChatView.setOnTouchListener(this);
-        mChatView.setMenuClickListener(new OnMenuClickListener() {
-
-            @Override
-            public boolean onSendTextMessage(CharSequence input) {
-                if (input.length() == 0) {
-                    return false;
-                }
-                TextContent textContent = new TextContent(input.toString());
-                Message message = mConv.createSendMessage(textContent);
-                JMessageClient.sendMessage(message);
-                final JMUIMessage msg = new JMUIMessage(message);
-                mAdapter.addToStart(msg, true);
-                message.setOnSendCompleteCallback(new BasicCallback() {
+            }
+            UserInfo userInfo = (UserInfo) mConv.getTargetInfo();
+            if (userInfo == null) {
+                JMessageClient.getUserInfo(mTargetId, new GetUserInfoCallback() {
                     @Override
-                    public void gotResult(int status, String desc) {
-                        mAdapter.updateMessage(msg);
+                    public void gotResult(int status, String s, UserInfo userInfo) {
                         if (status == 0) {
-                            Log.i(TAG, "send message succeed!");
-                        } else {
-                            Log.i(TAG, "send message failed");
+                            mChatView.setTitle(userInfo.getUserName());
                         }
                     }
                 });
-                return true;
+            } else {
+                mChatView.setTitle(userInfo.getUserName());
             }
+            mTargetInfo = new JMUserInfo(userInfo);
+            this.mImm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            mWindow = getWindow();
+            initMsgAdapter();
+            mChatView.setKeyboardChangedListener(this);
+            mChatView.setOnSizeChangedListener(this);
+            mChatView.setOnTouchListener(this);
+            mChatView.setMenuClickListener(new OnMenuClickListener() {
 
-            @Override
-            public void onSendFiles(List<FileItem> list) {
-                if (list == null || list.isEmpty()) {
-                    return;
+                @Override
+                public boolean onSendTextMessage(CharSequence input) {
+                    if (input.length() == 0) {
+                        return false;
+                    }
+                    TextContent textContent = new TextContent(input.toString());
+                    Message message = mConv.createSendMessage(textContent);
+                    JMessageClient.sendMessage(message);
+                    final JMUIMessage msg = new JMUIMessage(message);
+                    mAdapter.addToStart(msg, true);
+                    message.setOnSendCompleteCallback(new BasicCallback() {
+                        @Override
+                        public void gotResult(int status, String desc) {
+                            mAdapter.updateMessage(msg);
+                            if (status == 0) {
+                                Log.i(TAG, "send message succeed!");
+                            } else {
+                                Log.i(TAG, "send message failed");
+                            }
+                        }
+                    });
+                    return true;
                 }
 
-                for (final FileItem item : list) {
-                    if (item.getType() == FileItem.Type.Image) {
-                        Bitmap bitmap = BitmapLoader.getBitmapFromFile(item.getFilePath(), 720, 1280);
-                        ImageContent.createImageContentAsync(bitmap, new ImageContent.CreateImageContentCallback() {
-                            @Override
-                            public void gotResult(int status, String desc, ImageContent imageContent) {
-                                if (status == 0) {
-                                    Message msg = mConv.createSendMessage(imageContent);
-                                    JMessageClient.sendMessage(msg);
-                                    final JMUIMessage jmuiMessage = new JMUIMessage(msg);
-                                    jmuiMessage.setMediaFilePath(item.getFilePath());
-                                    MainActivity.this.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            mAdapter.addToStart(jmuiMessage, true);
-                                        }
-                                    });
-                                    msg.setOnContentUploadProgressCallback(new ProgressUpdateCallback() {
-                                        @Override
-                                        public void onProgressUpdate(double v) {
-                                            jmuiMessage.setProgress(Math.ceil(v * 100) + "%");
-                                            Log.w(TAG, "Uploading image progress" + Math.ceil(v * 100) + "%");
-                                            mAdapter.updateMessage(jmuiMessage);
-                                        }
-                                    });
-                                }
-                            }
-                        });
+                @Override
+                public void onSendFiles(List<FileItem> list) {
+                    if (list == null || list.isEmpty()) {
+                        return;
+                    }
 
-                    } else if (item.getType() == FileItem.Type.Video) {
+                    for (final FileItem item : list) {
+                        if (item.getType() == FileItem.Type.Image) {
+                            Bitmap bitmap = BitmapLoader.getBitmapFromFile(item.getFilePath(), 720, 1280);
+                            ImageContent.createImageContentAsync(bitmap, new ImageContent.CreateImageContentCallback() {
+                                @Override
+                                public void gotResult(int status, String desc, ImageContent imageContent) {
+                                    if (status == 0) {
+                                        Message msg = mConv.createSendMessage(imageContent);
+                                        JMessageClient.sendMessage(msg);
+                                        final JMUIMessage jmuiMessage = new JMUIMessage(msg);
+                                        jmuiMessage.setMediaFilePath(item.getFilePath());
+                                        MainActivity.this.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                mAdapter.addToStart(jmuiMessage, true);
+                                            }
+                                        });
+                                        msg.setOnContentUploadProgressCallback(new ProgressUpdateCallback() {
+                                            @Override
+                                            public void onProgressUpdate(double v) {
+                                                jmuiMessage.setProgress(Math.ceil(v * 100) + "%");
+                                                Log.w(TAG, "Uploading image progress" + Math.ceil(v * 100) + "%");
+                                                mAdapter.updateMessage(jmuiMessage);
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+
+                        } else if (item.getType() == FileItem.Type.Video) {
 //                        message = new JMUIMessage(null, IMessage.MessageType.SEND_VIDEO);
-                    } else {
-                        throw new RuntimeException("Invalid FileItem type. Must be Type.Image or Type.Video.");
+                        } else {
+                            throw new RuntimeException("Invalid FileItem type. Must be Type.Image or Type.Video.");
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void switchToMicrophoneMode() {
-                if ((ActivityCompat.checkSelfPermission(MainActivity.this,
-                        "android.permission.RECORD_AUDIO") != PackageManager.PERMISSION_GRANTED
-                        && ActivityCompat.checkSelfPermission(mContext,
-                        "android.permission.WRITE_EXTERNAL_STORAGE") != PackageManager.PERMISSION_GRANTED
-                        && ActivityCompat.checkSelfPermission(mContext,
-                        "android.permission.READ_EXTERNAL_STORAGE") != PackageManager.PERMISSION_GRANTED)) {
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{
-                            "android.permission.RECORD_AUDIO",
-                            "android.permission.WRITE_EXTERNAL_STORAGE",
-                            "android.permission.READ_EXTERNAL_STORAGE"}, REQUEST_RECORD_VOICE_PERMISSION);
+                @Override
+                public void switchToMicrophoneMode() {
+                    if ((ActivityCompat.checkSelfPermission(MainActivity.this,
+                            "android.permission.RECORD_AUDIO") != PackageManager.PERMISSION_GRANTED
+                            && ActivityCompat.checkSelfPermission(mContext,
+                            "android.permission.WRITE_EXTERNAL_STORAGE") != PackageManager.PERMISSION_GRANTED
+                            && ActivityCompat.checkSelfPermission(mContext,
+                            "android.permission.READ_EXTERNAL_STORAGE") != PackageManager.PERMISSION_GRANTED)) {
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                                "android.permission.RECORD_AUDIO",
+                                "android.permission.WRITE_EXTERNAL_STORAGE",
+                                "android.permission.READ_EXTERNAL_STORAGE"}, REQUEST_RECORD_VOICE_PERMISSION);
+                    }
                 }
-            }
 
-            @Override
-            public void switchToGalleryMode() {
+                @Override
+                public void switchToGalleryMode() {
 //                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
 //                        != PackageManager.PERMISSION_GRANTED) {
 //                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{
 //                            Manifest.permission.READ_EXTERNAL_STORAGE
 //                    }, REQUEST_PHOTO_PERMISSION);
 //                }
-            }
+                }
 
-            @Override
-            public void switchToCameraMode() {
+                @Override
+                public void switchToCameraMode() {
 //                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA)
 //                        != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(mContext,
 //                        Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -231,53 +229,73 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
 //                    }, REQUEST_CAMERA_PERMISSION);
 //                }
 
-                File rootDir = mContext.getFilesDir();
-                String fileDir = rootDir.getAbsolutePath() + "/photo";
-                mChatView.setCameraCaptureFile(fileDir, "temp_photo");
-            }
-
-        });
-
-        mChatView.setRecordVoiceListener(new RecordVoiceListener() {
-            @Override
-            public void onStartRecord() {
-                // Show record voice interface
-                // 设置存放录音文件目录
-                File rootDir = mContext.getFilesDir();
-                String fileDir = rootDir.getAbsolutePath() + "/voice";
-                mChatView.setRecordVoiceFile(fileDir, new DateFormat().format("yyyy_MMdd_hhmmss",
-                        Calendar.getInstance(Locale.CHINA)) + "");
-            }
-
-            @Override
-            public void onFinishRecord(File voiceFile, int duration) {
-                try {
-                    VoiceContent content = new VoiceContent(voiceFile, duration);
-                    Message msg = mConv.createSendMessage(content);
-                    JMessageClient.sendMessage(msg);
-                    final JMUIMessage jmuiMessage = new JMUIMessage(msg);
-                    mAdapter.addToStart(jmuiMessage, true);
-                    msg.setOnSendCompleteCallback(new BasicCallback() {
-                        @Override
-                        public void gotResult(int status, String s) {
-                            mAdapter.updateMessage(jmuiMessage);
-                            if (status == 0) {
-                                Log.i(TAG, "send voice message succeed!");
-                            } else {
-                                Log.i(TAG, "send voice message failed");
-                            }
-                        }
-                    });
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
+                    File rootDir = mContext.getFilesDir();
+                    String fileDir = rootDir.getAbsolutePath() + "/photo";
+                    mChatView.setCameraCaptureFile(fileDir, "temp_photo");
                 }
-            }
 
-            @Override
-            public void onCancelRecord() {
+            });
 
-            }
-        });
+            mChatView.setRecordVoiceListener(new RecordVoiceListener() {
+                @Override
+                public void onStartRecord() {
+                    // Show record voice interface
+                    // 设置存放录音文件目录
+                    File rootDir = mContext.getFilesDir();
+                    String fileDir = rootDir.getAbsolutePath() + "/voice";
+                    mChatView.setRecordVoiceFile(fileDir, new DateFormat().format("yyyy_MMdd_hhmmss",
+                            Calendar.getInstance(Locale.CHINA)) + "");
+                }
+
+                @Override
+                public void onFinishRecord(File voiceFile, int duration) {
+                    try {
+                        VoiceContent content = new VoiceContent(voiceFile, duration);
+                        Message msg = mConv.createSendMessage(content);
+                        JMessageClient.sendMessage(msg);
+                        final JMUIMessage jmuiMessage = new JMUIMessage(msg);
+                        mAdapter.addToStart(jmuiMessage, true);
+                        msg.setOnSendCompleteCallback(new BasicCallback() {
+                            @Override
+                            public void gotResult(int status, String s) {
+                                mAdapter.updateMessage(jmuiMessage);
+                                if (status == 0) {
+                                    Log.i(TAG, "send voice message succeed!");
+                                } else {
+                                    Log.i(TAG, "send voice message failed");
+                                }
+                            }
+                        });
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onCancelRecord() {
+
+                }
+            });
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            Log.e(TAG, "will start LoginActivity");
+            Intent intent = new Intent();
+            intent.setClass(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        JCoreInterface.onPause(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        JCoreInterface.onResume(this);
     }
 
     @Override
@@ -413,7 +431,10 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
     @Override
     public void onSizeChanged(int w, int h, int oldw, int oldh) {
         if (oldh - h > 300) {
-            mChatView.setMenuHeight(oldh - h);
+            if (SharePreferenceManager.getCachedKeyboardHeight() != oldh - h) {
+                SharePreferenceManager.setCachedKeyboardHeight(oldh - h);
+                mChatView.setMenuHeight(oldh - h);
+            }
         }
     }
 
