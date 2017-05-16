@@ -3,11 +3,8 @@ package cn.jiguang.imui.messages;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
-<<<<<<< HEAD:Android/messagelist/src/main/java/cn/jiguang/imui/messages/TxtViewHolder.java
 import android.widget.ProgressBar;
-=======
 import android.widget.ImageView;
->>>>>>> new jmessageuisample:Android/imui/src/main/java/cn/jiguang/imui/messages/TxtViewHolder.java
 import android.widget.TextView;
 
 import cn.jiguang.imui.BuildConfig;
@@ -24,11 +21,7 @@ public class TxtViewHolder<MESSAGE extends IMessage>
     protected TextView mDisplayNameTv;
     protected CircleImageView mAvatarIv;
     protected ImageButton mResendIb;
-<<<<<<< HEAD:Android/messagelist/src/main/java/cn/jiguang/imui/messages/TxtViewHolder.java
     protected ProgressBar mSendingPb;
-=======
-    protected ImageView mSendingIv;
->>>>>>> new jmessageuisample:Android/imui/src/main/java/cn/jiguang/imui/messages/TxtViewHolder.java
     protected boolean mIsSender;
 
     public TxtViewHolder(View itemView, boolean isSender) {
@@ -39,11 +32,7 @@ public class TxtViewHolder<MESSAGE extends IMessage>
         mAvatarIv = (CircleImageView) itemView.findViewById(R.id.aurora_iv_msgitem_avatar);
         mDisplayNameTv = (TextView) itemView.findViewById(R.id.aurora_tv_msgitem_display_name);
         mResendIb = (ImageButton) itemView.findViewById(R.id.aurora_ib_msgitem_resend);
-<<<<<<< HEAD:Android/messagelist/src/main/java/cn/jiguang/imui/messages/TxtViewHolder.java
         mSendingPb = (ProgressBar) itemView.findViewById(R.id.aurora_pb_msgitem_sending);
-=======
-        mSendingIv = (ImageView) itemView.findViewById(R.id.aurora_iv_msgitem_sending);
->>>>>>> new jmessageuisample:Android/imui/src/main/java/cn/jiguang/imui/messages/TxtViewHolder.java
     }
 
     @Override
@@ -66,7 +55,6 @@ public class TxtViewHolder<MESSAGE extends IMessage>
         } else {
             switch (message.getMessageStatus()) {
                 case SEND_GOING:
-<<<<<<< HEAD:Android/messagelist/src/main/java/cn/jiguang/imui/messages/TxtViewHolder.java
                     mSendingPb.setVisibility(View.VISIBLE);
                     mResendIb.setVisibility(View.GONE);
                     Log.i("TxtViewHolder", "sending message");
@@ -87,14 +75,6 @@ public class TxtViewHolder<MESSAGE extends IMessage>
                 case SEND_SUCCEED:
                     mSendingPb.setVisibility(View.GONE);
                     mResendIb.setVisibility(View.GONE);
-=======
-                    Log.i("TxtViewHolder", "sending message");
-                    break;
-                case SEND_FAILED:
-                    Log.i("TxtViewHolder", "send message failed");
-                    break;
-                case SEND_SUCCEED:
->>>>>>> new jmessageuisample:Android/imui/src/main/java/cn/jiguang/imui/messages/TxtViewHolder.java
                     Log.i("TxtViewHolder", "send message succeed");
                     break;
             }

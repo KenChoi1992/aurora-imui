@@ -34,7 +34,7 @@ public class JMUIMessage extends Message implements IMessage {
         }
     }
 
-    public Message getMessage() {
+    public Message getJMessage() {
         return this.message;
     }
 

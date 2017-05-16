@@ -85,7 +85,6 @@ public class PhotoViewHolder<MESSAGE extends IMessage> extends BaseMessageViewHo
             switch (message.getMessageStatus()) {
                 case SEND_GOING:
                     Log.i("PhotoViewHolder", "sending image, progress: " + message.getProgress());
-<<<<<<< HEAD:Android/messagelist/src/main/java/cn/jiguang/imui/messages/PhotoViewHolder.java
                     mSendingPb.setVisibility(View.VISIBLE);
                     mResendIb.setVisibility(View.GONE);
                     break;
@@ -105,13 +104,6 @@ public class PhotoViewHolder<MESSAGE extends IMessage> extends BaseMessageViewHo
                 case SEND_SUCCEED:
                     mSendingPb.setVisibility(View.GONE);
                     mResendIb.setVisibility(View.GONE);
-=======
-                    break;
-                case SEND_FAILED:
-                    Log.i("PhotoViewHolder", "send image failed");
-                    break;
-                case SEND_SUCCEED:
->>>>>>> jmuisample test add send progress:Android/imui/src/main/java/cn/jiguang/imui/messages/PhotoViewHolder.java
                     Log.i("PhotoViewHolder", "send image succeed");
                     break;
             }

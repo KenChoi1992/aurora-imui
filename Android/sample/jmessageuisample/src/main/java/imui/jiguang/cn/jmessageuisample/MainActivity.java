@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -31,6 +30,7 @@ import java.util.Locale;
 
 import cn.jiguang.api.JCoreInterface;
 import cn.jiguang.imui.chatinput.ChatInputView;
+import cn.jiguang.imui.chatinput.listener.OnCameraCallbackListener;
 import cn.jiguang.imui.chatinput.listener.OnMenuClickListener;
 import cn.jiguang.imui.chatinput.listener.RecordVoiceListener;
 import cn.jiguang.imui.chatinput.model.FileItem;
@@ -136,7 +136,12 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
                     Message message = mConv.createSendMessage(textContent);
                     JMessageClient.sendMessage(message);
                     final JMUIMessage msg = new JMUIMessage(message);
-                    mAdapter.addToStart(msg, true);
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mAdapter.addToStart(msg, true);
+                        }
+                    });
                     message.setOnSendCompleteCallback(new BasicCallback() {
                         @Override
                         public void gotResult(int status, String desc) {
@@ -144,7 +149,7 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
                             if (status == 0) {
                                 Log.i(TAG, "send message succeed!");
                             } else {
-                                Log.i(TAG, "send message failed");
+                                Log.i(TAG, "send message failed " + desc);
                             }
                         }
                     });
@@ -180,6 +185,17 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
                                                 jmuiMessage.setProgress(Math.ceil(v * 100) + "%");
                                                 Log.w(TAG, "Uploading image progress" + Math.ceil(v * 100) + "%");
                                                 mAdapter.updateMessage(jmuiMessage);
+                                            }
+                                        });
+                                        msg.setOnSendCompleteCallback(new BasicCallback() {
+                                            @Override
+                                            public void gotResult(int status, String desc) {
+                                                mAdapter.updateMessage(jmuiMessage);
+                                                if (status == 0) {
+                                                    Log.i(TAG, "Send image succeed");
+                                                } else {
+                                                    Log.i(TAG, "Send image failed, " + desc);
+                                                }
                                             }
                                         });
                                     }
@@ -276,6 +292,64 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
 
                 }
             });
+
+            mChatView.setOnCameraCallbackListener(new OnCameraCallbackListener() {
+                @Override
+                public void onTakePictureCompleted(final String photoPath) {
+                    Bitmap bitmap = BitmapLoader.getBitmapFromFile(photoPath, 720, 1280);
+                    ImageContent.createImageContentAsync(bitmap, new ImageContent.CreateImageContentCallback() {
+                        @Override
+                        public void gotResult(int status, String desc, ImageContent imageContent) {
+                            if (status == 0) {
+                                Message msg = mConv.createSendMessage(imageContent);
+                                JMessageClient.sendMessage(msg);
+                                final JMUIMessage jmuiMessage = new JMUIMessage(msg);
+                                jmuiMessage.setMediaFilePath(photoPath);
+                                MainActivity.this.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mAdapter.addToStart(jmuiMessage, true);
+                                    }
+                                });
+                                msg.setOnContentUploadProgressCallback(new ProgressUpdateCallback() {
+                                    @Override
+                                    public void onProgressUpdate(double v) {
+                                        jmuiMessage.setProgress(Math.ceil(v * 100) + "%");
+                                        Log.w(TAG, "Uploading image progress" + Math.ceil(v * 100) + "%");
+                                        mAdapter.updateMessage(jmuiMessage);
+                                    }
+                                });
+                                msg.setOnSendCompleteCallback(new BasicCallback() {
+                                    @Override
+                                    public void gotResult(int status, String desc) {
+                                        mAdapter.updateMessage(jmuiMessage);
+                                        if (status == 0) {
+                                            Log.i(TAG, "Send image succeed");
+                                        } else {
+                                            Log.i(TAG, "Send image failed, " + desc);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public void onStartVideoRecord() {
+
+                }
+
+                @Override
+                public void onFinishVideoRecord(String videoPath) {
+
+                }
+
+                @Override
+                public void onCancelVideoRecord() {
+
+                }
+            });
         } catch (NullPointerException e) {
             e.printStackTrace();
             Log.e(TAG, "will start LoginActivity");
@@ -366,6 +440,22 @@ public class MainActivity extends Activity implements ChatView.OnKeyboardChanged
                 // Do something
             }
         });
+
+        mAdapter.setMsgResendListener(new MsgListAdapter.OnMsgResendListener<JMUIMessage>() {
+            @Override
+            public void onMessageResend(final JMUIMessage message) {
+                Log.d(TAG, "Resend message: " + message);
+                Message msg = message.getJMessage();
+                JMessageClient.sendMessage(msg);
+                msg.setOnSendCompleteCallback(new BasicCallback() {
+                    @Override
+                    public void gotResult(int status, String desc) {
+                        mAdapter.updateMessage(message);
+                    }
+                });
+            }
+        });
+
         mAdapter.setOnLoadMoreListener(new MsgListAdapter.OnLoadMoreListener() {
             @Override
             public void onLoadMore(int page, int totalCount) {
