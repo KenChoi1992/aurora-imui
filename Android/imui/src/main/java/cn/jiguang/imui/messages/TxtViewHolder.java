@@ -3,7 +3,7 @@ package cn.jiguang.imui.messages;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import cn.jiguang.imui.BuildConfig;
@@ -20,7 +20,7 @@ public class TxtViewHolder<MESSAGE extends IMessage>
     protected TextView mDisplayNameTv;
     protected CircleImageView mAvatarIv;
     protected ImageButton mResendIb;
-    protected ImageView mSendingIv;
+    protected ProgressBar mSendingPb;
     protected boolean mIsSender;
 
     public TxtViewHolder(View itemView, boolean isSender) {
@@ -31,7 +31,7 @@ public class TxtViewHolder<MESSAGE extends IMessage>
         mAvatarIv = (CircleImageView) itemView.findViewById(R.id.aurora_iv_msgitem_avatar);
         mDisplayNameTv = (TextView) itemView.findViewById(R.id.aurora_tv_msgitem_display_name);
         mResendIb = (ImageButton) itemView.findViewById(R.id.aurora_ib_msgitem_resend);
-        mSendingIv = (ImageView) itemView.findViewById(R.id.aurora_iv_msgitem_sending);
+        mSendingPb = (ProgressBar) itemView.findViewById(R.id.aurora_pb_msgitem_sending);
     }
 
     @Override
@@ -54,12 +54,26 @@ public class TxtViewHolder<MESSAGE extends IMessage>
         } else {
             switch (message.getMessageStatus()) {
                 case SEND_GOING:
+                    mSendingPb.setVisibility(View.VISIBLE);
+                    mResendIb.setVisibility(View.GONE);
                     Log.i("TxtViewHolder", "sending message");
                     break;
                 case SEND_FAILED:
+                    mSendingPb.setVisibility(View.GONE);
                     Log.i("TxtViewHolder", "send message failed");
+                    mResendIb.setVisibility(View.VISIBLE);
+                    mResendIb.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (mMsgResendListener != null) {
+                                mMsgResendListener.onMessageResend(message);
+                            }
+                        }
+                    });
                     break;
                 case SEND_SUCCEED:
+                    mSendingPb.setVisibility(View.GONE);
+                    mResendIb.setVisibility(View.GONE);
                     Log.i("TxtViewHolder", "send message succeed");
                     break;
             }
@@ -109,6 +123,12 @@ public class TxtViewHolder<MESSAGE extends IMessage>
                     style.getSendBubblePaddingTop(),
                     style.getSendBubblePaddingRight(),
                     style.getSendBubblePaddingBottom());
+            if (style.getSendingProgressDrawable() != null) {
+                mSendingPb.setProgressDrawable(style.getSendingProgressDrawable());
+            }
+            if (style.getSendingIndeterminateDrawable() != null) {
+                mSendingPb.setIndeterminateDrawable(style.getSendingIndeterminateDrawable());
+            }
         } else {
             mMsgTv.setBackground(style.getReceiveBubbleDrawable());
             mMsgTv.setTextColor(style.getReceiveBubbleTextColor());

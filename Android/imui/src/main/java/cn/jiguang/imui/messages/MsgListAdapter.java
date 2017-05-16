@@ -57,6 +57,7 @@ public class MsgListAdapter<MESSAGE extends IMessage> extends RecyclerView.Adapt
     private OnMsgClickListener<MESSAGE> mMsgClickListener;
     private OnMsgLongClickListener<MESSAGE> mMsgLongClickListener;
     private OnAvatarClickListener<MESSAGE> mAvatarClickListener;
+    private OnMsgResendListener<MESSAGE> mMsgResendListener;
     private SelectionListener mSelectionListener;
     private int mSelectedItemCount;
     private RecyclerView.LayoutManager mLayoutManager;
@@ -160,6 +161,7 @@ public class MsgListAdapter<MESSAGE extends IMessage> extends RecyclerView.Adapt
             ((BaseMessageViewHolder) holder).mMsgLongClickListener = this.mMsgLongClickListener;
             ((BaseMessageViewHolder) holder).mMsgClickListener = this.mMsgClickListener;
             ((BaseMessageViewHolder) holder).mAvatarClickListener = this.mAvatarClickListener;
+            ((BaseMessageViewHolder) holder).mMsgResendListener = this.mMsgResendListener;
             ((BaseMessageViewHolder) holder).mMediaPlayer = this.mMediaPlayer;
         }
         holder.onBind(wrapper.item);
@@ -517,6 +519,14 @@ public class MsgListAdapter<MESSAGE extends IMessage> extends RecyclerView.Adapt
 
     public interface OnAvatarClickListener<MESSAGE extends IMessage> {
         void onAvatarClick(MESSAGE message);
+    }
+
+    public void setMsgResendListener(OnMsgResendListener<MESSAGE> listener) {
+        this.mMsgResendListener = listener;
+    }
+
+    public interface OnMsgResendListener<MESSAGE extends IMessage> {
+        void onMessageResend(MESSAGE message);
     }
 
     /**

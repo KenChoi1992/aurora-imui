@@ -6,7 +6,9 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,12 +25,14 @@ public class VoiceViewHolder<MESSAGE extends IMessage> extends BaseMessageViewHo
         implements MsgListAdapter.DefaultMessageViewHolder {
 
     private boolean mIsSender;
-    protected TextView mMsgTv;
-    protected TextView mDateTv;
-    protected CircleImageView mAvatarIv;
-    protected ImageView mVoiceIv;
-    protected TextView mLengthTv;
-    protected ImageView mUnreadStatusIv;
+    private TextView mMsgTv;
+    private TextView mDateTv;
+    private CircleImageView mAvatarIv;
+    private ImageView mVoiceIv;
+    private TextView mLengthTv;
+    private ImageView mUnreadStatusIv;
+    private ProgressBar mSendingPb;
+    private ImageButton mResendIb;
     private boolean mSetData = false;
     private AnimationDrawable mVoiceAnimation;
     private FileInputStream mFIS;
@@ -50,6 +54,9 @@ public class VoiceViewHolder<MESSAGE extends IMessage> extends BaseMessageViewHo
         mLengthTv = (TextView) itemView.findViewById(R.id.aurora_tv_voice_length);
         if (!isSender) {
             mUnreadStatusIv = (ImageView) itemView.findViewById(R.id.aurora_iv_msgitem_read_status);
+        } else {
+            mSendingPb = (ProgressBar) itemView.findViewById(R.id.aurora_pb_msgitem_sending);
+            mResendIb = (ImageButton) itemView.findViewById(R.id.aurora_ib_msgitem_resend);
         }
         mController = ViewHolderController.getInstance();
     }
@@ -77,6 +84,31 @@ public class VoiceViewHolder<MESSAGE extends IMessage> extends BaseMessageViewHo
         int width = (int) (-0.04 * duration * duration + 4.526 * duration + 75.214);
         mMsgTv.setWidth((int) (width * mDensity));
         mLengthTv.setText(lengthStr);
+
+        if (mIsSender) {
+            switch (message.getMessageStatus()) {
+                case SEND_GOING:
+                    mSendingPb.setVisibility(View.VISIBLE);
+                    mResendIb.setVisibility(View.GONE);
+                    break;
+                case SEND_FAILED:
+                    mSendingPb.setVisibility(View.GONE);
+                    mResendIb.setVisibility(View.VISIBLE);
+                    mResendIb.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (mMsgResendListener != null) {
+                                mMsgResendListener.onMessageResend(message);
+                            }
+                        }
+                    });
+                    break;
+                case SEND_SUCCEED:
+                    mSendingPb.setVisibility(View.GONE);
+                    mResendIb.setVisibility(View.GONE);
+                    break;
+            }
+        }
 
         mMsgTv.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -230,6 +262,12 @@ public class VoiceViewHolder<MESSAGE extends IMessage> extends BaseMessageViewHo
         if (mIsSender) {
             mVoiceIv.setImageResource(mSendDrawable);
             mMsgTv.setBackground(style.getSendBubbleDrawable());
+            if (style.getSendingProgressDrawable() != null) {
+                mSendingPb.setProgressDrawable(style.getSendingProgressDrawable());
+            }
+            if (style.getSendingIndeterminateDrawable() != null) {
+                mSendingPb.setIndeterminateDrawable(style.getSendingIndeterminateDrawable());
+            }
         } else {
             mVoiceIv.setImageResource(mReceiveDrawable);
             mMsgTv.setBackground(style.getReceiveBubbleDrawable());
