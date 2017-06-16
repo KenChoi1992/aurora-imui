@@ -4,7 +4,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import cn.jiguang.imui.BuildConfig;

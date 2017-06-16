@@ -129,10 +129,13 @@ extension ViewController: IMUIMessageMessageCollectionViewDelegate {
   func messageCollectionView(didTapHeaderImageInCell: UICollectionViewCell, model: IMUIMessageModelProtocol) {
     self.showToast(alert: "tap header image")
   }
+<<<<<<< HEAD:iOS/sample/sample/ViewController.swift
   
   func messageCollectionView(didTapStatusViewInCell: UICollectionViewCell, model: IMUIMessageModelProtocol) {
     self.showToast(alert: "tap status View")
   }
+=======
+>>>>>>> aedf37d5b97d5443c5a962709dc247feeebe0b02:iOS/IMUIChat/IMUIChat/ViewController.swift
   
   func messageCollectionView(_: UICollectionView, willDisplayMessageCell: UICollectionViewCell, forItemAt: IndexPath, model: IMUIMessageModelProtocol) {
   

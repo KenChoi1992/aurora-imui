@@ -79,10 +79,14 @@ public class MyMessage implements IMessage {
     @Override
     public MessageStatus getMessageStatus() {
 <<<<<<< HEAD
+<<<<<<< HEAD
         return MessageStatus.SEND_SUCCEED;
 =======
         return null;
 >>>>>>> new jmessageuisample
+=======
+        return null;
+>>>>>>> aedf37d5b97d5443c5a962709dc247feeebe0b02
     }
 
     @Override
